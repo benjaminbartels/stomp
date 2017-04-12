@@ -16,6 +16,7 @@ var (
 // Writes STOMP frames to an underlying io.Writer.
 type Writer struct {
 	writer *bufio.Writer
+	Encode bool
 }
 
 // Creates a new Writer object, which writes to an underlying io.Writer.
@@ -24,7 +25,7 @@ func NewWriter(writer io.Writer) *Writer {
 }
 
 func NewWriterSize(writer io.Writer, bufferSize int) *Writer {
-	return &Writer{writer: bufio.NewWriterSize(writer, bufferSize)}
+	return &Writer{writer: bufio.NewWriterSize(writer, bufferSize), Encode: true}
 }
 
 // Write the contents of a frame to the underlying io.Writer.
@@ -53,7 +54,12 @@ func (w *Writer) Write(f *Frame) error {
 			for i := 0; i < f.Header.Len(); i++ {
 				key, value := f.Header.GetAt(i)
 				//println("   ", key, ":", value)
-				_, err = w.writer.Write(encodeValue(key))
+
+				if w.Encode {
+					_, err = w.writer.Write(encodeValue(key))
+				} else {
+					_, err = w.writer.Write([]byte(key))
+				}
 				if err != nil {
 					return err
 				}
@@ -61,7 +67,11 @@ func (w *Writer) Write(f *Frame) error {
 				if err != nil {
 					return err
 				}
-				_, err = w.writer.Write(encodeValue(value))
+				if w.Encode {
+					_, err = w.writer.Write(encodeValue(value))
+				} else {
+					_, err = w.writer.Write([]byte(value))
+				}
 				if err != nil {
 					return err
 				}

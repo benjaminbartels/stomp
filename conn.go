@@ -128,6 +128,10 @@ func Connect(conn io.ReadWriteCloser, opts ...func(*Conn) error) (*Conn, error) 
 		c.version = V10
 	}
 
+	if c.version == V10 {
+		writer.Encode = false
+	}
+
 	if heartBeat, ok := response.Header.Contains(frame.HeartBeat); ok {
 		readTimeout, writeTimeout, err := frame.ParseHeartBeat(heartBeat)
 		if err != nil {
